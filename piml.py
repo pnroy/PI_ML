@@ -1,11 +1,13 @@
 from argparse import ArgumentParser
+import os.path
+from os import path
 import numpy as np
 import scipy as sp
 import subprocess
 import matplotlib.pyplot as plt
 
 
-T=20 # temperature in Kelvin
+T=2. # temperature in Kelvin
 beta=1./T # in K^-1
 P=3 # number of beads
 tau=beta/float(P)
@@ -16,10 +18,15 @@ delta_gamma=2./float(Ngrid)
 
 nskip=100
 
-MC_steps=1000000
+MC_steps=100000
 step_z=1.
 step_phi=1.
 linprop_command='./linear_prop/linden.x'
+
+if (path.exists(linprop_command)==False):
+	subprocess.run('make',cwd="./linear_prop")
+
+#check if executable exists
 #arguments=str(T)+' '+str(P)+' '+str(B)+' '+str(Ngrid)+' -1'
 process_log=subprocess.run([linprop_command,str(T),str(P),str(B),str(Ngrid),' -1'], capture_output=True)
 print(process_log)
@@ -55,7 +62,7 @@ paths_output=open('paths.xyz','w')
 
 for step in range(MC_steps):
 
-	#sample one bead at a time
+	#sample one bead at a time; can one improve this?
 	for p in range(P):
 		z=path_angles[0,p]
 		phi=path_angles[1,p]
