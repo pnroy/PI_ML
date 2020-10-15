@@ -16,9 +16,9 @@ Ngrid=1500
 
 delta_gamma=2./float(Ngrid)
 
-nskip=100
+nskip=10
 
-MC_steps=100000
+MC_steps=10000
 step_z=1.
 step_phi=1.
 linprop_command='./linear_prop/linden.x'
@@ -50,8 +50,6 @@ for line in density_file:
 path_angles=np.zeros((2,P),float)
 path_xyz=np.zeros((3,P),float)
 path_xyz_new=np.zeros((3,P),float)
-
-fig1 = plt.figure()
 
 N_accept=0
 N_total=0
