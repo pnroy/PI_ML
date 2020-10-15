@@ -67,16 +67,19 @@ for step in range(MC_steps):
 
 		#uniform MC move
 		z+=step_z*(np.random.random()-.5)
-		phi+=step_phi*(np.random.random()-.5)
+		phi+=step_phi*(np.random.random())
 
 		if (z >  1.0):
 			z = 2.0 - z
 		if (z < -1.0):
 			z = -2.0 - z
-
 		sint = np.sqrt(1.0 - z*z)
-		path_xyz_new[0][p] = sint*np.cos(phi)
-		path_xyz_new[1][p] = sint*np.sin(phi)
+
+		x=sint*np.cos(phi)
+		y=sint*np.sin(phi)
+
+		path_xyz_new[0][p] = x
+		path_xyz_new[1][p] = y
 		path_xyz_new[2][p] = z
 
 # the old density
