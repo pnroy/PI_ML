@@ -9,18 +9,18 @@ import matplotlib.pyplot as plt
 
 T=2. # temperature in Kelvin
 beta=1./T # in K^-1
-P=3 # number of beads
+P=16 # number of beads
 tau=beta/float(P)
 B=1. # rotational constant
 Ngrid=1500
 
 delta_gamma=2./float(Ngrid)
 
-nskip=10
+nskip=1
 
-MC_steps=10000
-step_z=1.
-step_phi=1.
+MC_steps=100000
+step_z=.3
+step_phi=.4
 linprop_command='./linear_prop/linden.x'
 
 if (path.exists(linprop_command)==False):
@@ -54,7 +54,8 @@ path_xyz_new=np.zeros((3,P),float)
 N_accept=0
 N_total=0
 
-srot_total = 0.0
+E_avg = 0.0
+E2_avg = 0.0
 
 paths_output=open('paths.xyz','w')
 
@@ -66,8 +67,8 @@ for step in range(MC_steps):
 		phi=path_angles[1,p]
 
 		#uniform MC move
-		z+=step_z*(np.random.random()-.5)
-		phi+=step_phi*(np.random.random())
+		z+=step_z*2.*(np.random.random()-.5)
+		phi+=step_phi*2.*np.pi*(np.random.random())
 
 		if (z >  1.0):
 			z = 2.0 - z
@@ -143,6 +144,7 @@ for step in range(MC_steps):
 	if (step%nskip==0):
 		#estimators
 		srot=0.
+		srot2=0.
 		for p in range(P):
 
 			dot1 = 0.0
@@ -154,10 +156,15 @@ for step in range(MC_steps):
 
 			index_1=int((dot1+1.)/delta_gamma)
 			dens=rho[index_1]
-			if (dens > 1.e-14):
-				srot +=(rho_E[index_1]/dens)
-		srot_total+=srot
-		#print((rho_E[index_1]/dens))
+			E=rho_E[index_1]/dens
+			E2=(rho_E[index_1]/dens)**2
+			if (dens > 1.e-9):
+				srot +=E
+				srot2 +=E2
+			#print(srot,dot1,(rho_E[index_1]/dens))
+
+		E_avg+=srot
+		E2_avg+=srot2
 # output paths to a file
 		for p in range(P):
 			paths_output.write(str(path_xyz[0][p])+' '+str(path_xyz[1][p])+' '+str(path_xyz[2][p])+'\n')
@@ -165,6 +172,8 @@ for step in range(MC_steps):
 paths_output.close()
 
 print('accept ratio: ',float(N_accept)/float(N_total))
-print('<K>: ',srot_total/float(MC_steps)*float(nskip))
+E_avg=E_avg/float(MC_steps)*float(nskip)
+E2_avg=E2_avg/float(MC_steps)*float(nskip)
+print('<K>: ',E_avg,(E2_avg-E_avg**2)/np.sqrt(float(MC_steps)/float(nskip)))
 
 
