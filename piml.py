@@ -7,20 +7,20 @@ import subprocess
 import matplotlib.pyplot as plt
 
 
-T=2. # temperature in Kelvin
+T=1. # temperature in Kelvin
 beta=1./T # in K^-1
-P=16 # number of beads
+P=4 # number of beads
 tau=beta/float(P)
 B=1. # rotational constant
 Ngrid=1500
 
 delta_gamma=2./float(Ngrid)
 
-nskip=1
+nskip=100
 
 MC_steps=100000
-step_z=.3
-step_phi=.4
+step_z=1.
+step_phi=1.
 linprop_command='./linear_prop/linden.x'
 
 if (path.exists(linprop_command)==False):
@@ -63,6 +63,7 @@ for step in range(MC_steps):
 
 	#sample one bead at a time; can one improve this?
 	for p in range(P):
+
 		z=path_angles[0,p]
 		phi=path_angles[1,p]
 
@@ -79,9 +80,9 @@ for step in range(MC_steps):
 		x=sint*np.cos(phi)
 		y=sint*np.sin(phi)
 
-		path_xyz_new[0][p] = x
-		path_xyz_new[1][p] = y
-		path_xyz_new[2][p] = z
+		path_xyz_new[0,p] = x
+		path_xyz_new[1,p] = y
+		path_xyz_new[2,p] = z
 
 # the old density
 
@@ -94,8 +95,8 @@ for step in range(MC_steps):
 		if (p_plus>=P):
 			p_plus-=P
 		for id in range(3):
-			dot0 += (path_xyz[id][p_minus]*path_xyz[id][p])
-			dot1 += (path_xyz[id][p]*path_xyz[id][p_plus])
+			dot0 += (path_xyz[id,p_minus]*path_xyz[id,p])
+			dot1 += (path_xyz[id,p]*path_xyz[id,p_plus])
 
 		# find points on cos_gamma grid
 		
@@ -106,15 +107,15 @@ for step in range(MC_steps):
 
 		# potential
 #
-		pot_old=0.
+#		pot_old=0.
 
 # the new density 
 
 		dot0 = 0.0	
 		dot1 = 0.0
 		for id in range(3):
-			dot0 += (path_xyz[id][p_minus]*path_xyz_new[id][p])
-			dot1 += (path_xyz_new[id][p]*path_xyz[id][p_plus])
+			dot0 += (path_xyz[id,p_minus]*path_xyz_new[id,p])
+			dot1 += (path_xyz_new[id,p]*path_xyz[id,p_plus])
 		index_0=int((dot0+1.)/delta_gamma)
 		index_1=int((dot1+1.)/delta_gamma)
 		dens_new=rho[index_0]*rho[index_1]
@@ -139,7 +140,7 @@ for step in range(MC_steps):
 			path_angles[1,p] = phi
 
 			for id in range(3):
-				path_xyz[id][p]=path_xyz_new[id][p]
+				path_xyz[id,p]=path_xyz_new[id,p]
 
 	if (step%nskip==0):
 		#estimators
@@ -152,7 +153,7 @@ for step in range(MC_steps):
 			if (p_plus>=P):
 				p_plus-=P
 			for id in range(3):
-				dot1 += (path_xyz[id][p]*path_xyz[id][p_plus])
+				dot1 += (path_xyz[id,p]*path_xyz[id,p_plus])
 
 			index_1=int((dot1+1.)/delta_gamma)
 			dens=rho[index_1]
@@ -161,19 +162,19 @@ for step in range(MC_steps):
 			if (dens > 1.e-9):
 				srot +=E
 				srot2 +=E2
-			#print(srot,dot1,(rho_E[index_1]/dens))
+			#print(dot1,E)
 
 		E_avg+=srot
 		E2_avg+=srot2
 # output paths to a file
 		for p in range(P):
-			paths_output.write(str(path_xyz[0][p])+' '+str(path_xyz[1][p])+' '+str(path_xyz[2][p])+'\n')
+			paths_output.write(str(path_xyz[0,p])+' '+str(path_xyz[1,p])+' '+str(path_xyz[2,p])+'\n')
 		paths_output.write('\n')
 paths_output.close()
 
 print('accept ratio: ',float(N_accept)/float(N_total))
 E_avg=E_avg/float(MC_steps)*float(nskip)
 E2_avg=E2_avg/float(MC_steps)*float(nskip)
-print('<K>: ',E_avg,(E2_avg-E_avg**2)/np.sqrt(float(MC_steps)/float(nskip)))
+print('<K>: ',E_avg,np.sqrt((E2_avg-E_avg**2))/(float(MC_steps)/float(nskip)))
 
 
