@@ -30,8 +30,9 @@ if (path.exists(linprop_command)==False):
 
 #check if executable exists
 #arguments=str(T)+' '+str(P)+' '+str(B)+' '+str(Ngrid)+' -1'
-process_log=subprocess.run([linprop_command,str(T),str(P),str(B),str(Ngrid),' -1'], capture_output=True)
-print(process_log)
+process_log=subprocess.run([linprop_command,str(T),str(P),str(B),str(Ngrid),' -1'])
+#process_log=subprocess.run([linprop_command,str(T),str(P),str(B),str(Ngrid),' -1'], capture_output=True)
+#print(process_log)
 density_file_path='linden.out'
 density_file=open(density_file_path,'r')
 cos_gamma=np.zeros(Ngrid,float)
