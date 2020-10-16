@@ -4,23 +4,25 @@ from os import path
 import numpy as np
 import scipy as sp
 import subprocess
-import matplotlib.pyplot as plt
 
 
 T=1. # temperature in Kelvin
 beta=1./T # in K^-1
-P=4 # number of beads
+P=8 # number of beads
 tau=beta/float(P)
-B=1. # rotational constant
+kB= 0.6950356  # 1/cm per Kelvin
+B=1. # rotational constant in Kelvin
+B*=kB # # rotational constant in 1/CM (required for linden.x)
+mu=0.
 Ngrid=1500
 
 delta_gamma=2./float(Ngrid)
 
-nskip=100
+nskip=1
 
-MC_steps=100000
-step_z=1.
-step_phi=1.
+MC_steps=10000
+step_z=.3
+step_phi=.5
 linprop_command='./linear_prop/linden.x'
 
 if (path.exists(linprop_command)==False):
@@ -53,16 +55,23 @@ path_xyz_new=np.zeros((3,P),float)
 
 N_accept=0
 N_total=0
+N_averages=0
 
 E_avg = 0.0
 E2_avg = 0.0
 
 paths_output=open('paths.xyz','w')
 
+P_list=[]
+for p in range(0,P,2):
+	P_list.append(p)
+for p in range(1,P,2):
+	P_list.append(p)
+
 for step in range(MC_steps):
 
 	#sample one bead at a time; can one improve this?
-	for p in range(P):
+	for p in P_list:
 
 		z=path_angles[0,p]
 		phi=path_angles[1,p]
@@ -107,7 +116,7 @@ for step in range(MC_steps):
 
 		# potential
 #
-#		pot_old=0.
+		pot_old=mu*path_xyz[2,p]
 
 # the new density 
 
@@ -122,8 +131,8 @@ for step in range(MC_steps):
 
 		rd=dens_new/dens_old
 
-#		pot_new=0.
-#		rd *= np.exp(- tau*(pot_new-pot_old));
+		pot_new=mu*path_xyz_new[2,p]
+		rd *= np.exp(- tau*(pot_new-pot_old));
    
 		Accepted = False
 
@@ -144,6 +153,7 @@ for step in range(MC_steps):
 
 	if (step%nskip==0):
 		#estimators
+		N_averages+=1
 		srot=0.
 		srot2=0.
 		for p in range(P):
@@ -173,8 +183,8 @@ for step in range(MC_steps):
 paths_output.close()
 
 print('accept ratio: ',float(N_accept)/float(N_total))
-E_avg=E_avg/float(MC_steps)*float(nskip)
-E2_avg=E2_avg/float(MC_steps)*float(nskip)
-print('<K>: ',E_avg,np.sqrt((E2_avg-E_avg**2))/(float(MC_steps)/float(nskip)))
+E_avg=E_avg/float(N_averages)
+E2_avg=E2_avg/float(N_averages)
+print('<K>: ',E_avg,np.sqrt((E2_avg-E_avg**2))/(float(N_averages)))
 
 
