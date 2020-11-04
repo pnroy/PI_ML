@@ -1,9 +1,10 @@
 from argparse import ArgumentParser
 import os.path
 from os import path
+import sys
 from rotor_pi import linrotstep,table_sample
 import numpy as np
-import scipy as sp
+#import scipy as sp
 import subprocess
 
 RZERO=1e-10
@@ -18,13 +19,16 @@ mu=0.
 Ngrid=1500
 delta_gamma=2./float(Ngrid-1)
 
+sampling_flag=sys.argv[1]
+print(sampling_flag)
+
 n_equilibrate=1000
-nskip=100
-nskip2=100
+nskip=10
+nskip2=10
 
 MC_steps=100000
-step_z=.5
-step_phi=.3
+step_z=1.5
+step_phi=3.
 linprop_command='./linear_prop/linden.x'
 
 if (path.exists(linprop_command)==False):
@@ -71,14 +75,19 @@ for p in range(P):
 
 
 #create an off-diagonal rho
-Nz=30
-Nphi=30
+#Nz=100
+#Nphi=100
+Nz=20
+Nphi=20
 dz=2./float(Nz-1)
 dphi=(2.*np.pi)/float(Nphi-1)
 
 Ngrid_zphi=Nz*Nphi
 rho_eep=np.zeros((Ngrid_zphi,Ngrid_zphi),float)
-rho_E_eep=np.zeros((Ngrid_zphi,Ngrid_zphi),float)
+#rho_E_eep=np.zeros((Ngrid_zphi,Ngrid_zphi),float)
+x_grid=np.zeros((Ngrid_zphi,Ngrid_zphi),float)
+y_grid=np.zeros((Ngrid_zphi,Ngrid_zphi),float)
+z_grid=np.zeros((Ngrid_zphi,Ngrid_zphi),float)
 for i in range(Nz):
 	z=-1.+dz*float(i)
 	sint = np.sqrt(1.0 - z*z)
@@ -86,14 +95,15 @@ for i in range(Nz):
 		phi=-np.pi+dphi*float(j)
 		x=sint*np.cos(phi)
 		y=sint*np.sin(phi)
+		x_grid[i,j]=x
+		y_grid[i,j]=y
+		z_grid[i,j]=z
+
+for i in range(Nz):
+	for j in range(Nphi):
 		for ip in range(Nz):
-			zp=-1.+dz*float(ip)
-			sintp = np.sqrt(1.0 - zp*zp)
 			for jp in range(Nphi):
-				phip=np.pi+dphi*float(jp)
-				xp=sintp*np.cos(phip)
-				yp=sintp*np.sin(phip)
-				dot=x*xp+y*yp+z*zp
+				dot=x_grid[i,j]*x_grid[ip,jp]+y_grid[i,j]*y_grid[ip,jp]+z_grid[i,j]*z_grid[ip,jp]
 				index=int((dot+1.)/delta_gamma)
 				if (index>=Ngrid):
 					index=Ngrid-1
@@ -113,10 +123,13 @@ N_accept=0
 N_total=0
 N_averages=0
 
+step_out=0
+
 E_avg = 0.0
 E2_avg = 0.0
 
 paths_output=open('paths.xyz','w')
+E_output=open('E.dat','w')
 
 histo_out=open('histo.xyz','w')
 nbins=20
@@ -134,8 +147,10 @@ for step in range(MC_steps):
 	#sample one bead at a time; can one improve this?
 	for p in P_list:
 
-		N_total,N_accept=linrotstep(P,path_angles,step_z,step_phi,path_xyz,path_xyz_new,delta_gamma,rho,Ngrid,mu,tau,N_total,N_accept,p,RZERO)
-#		N_total,N_accept=table_sample(P,path_angles,step_z,step_phi,path_xyz,path_xyz_new,delta_gamma,rho,Ngrid,rho_eep,dz,dphi,Nz,Nphi,mu,tau,N_total,N_accept,p,RZERO)
+		if (sampling_flag=='0'):
+			N_total,N_accept=linrotstep(P,path_angles,step_z,step_phi,path_xyz,path_xyz_new,delta_gamma,rho,Ngrid,mu,tau,N_total,N_accept,p,RZERO)
+		if (sampling_flag=='1'):
+			N_total,N_accept=table_sample(P,path_angles,step_z,step_phi,path_xyz,path_xyz_new,delta_gamma,rho,Ngrid,rho_eep,dz,dphi,Nz,Nphi,mu,tau,N_total,N_accept,p,RZERO)
 
 	if (step%nskip==0 and step >n_equilibrate):
 		#estimators
@@ -158,6 +173,7 @@ for step in range(MC_steps):
 
 			E=rho_E[index_1]/dens
 			E2=(rho_E[index_1]/dens)**2
+			E_output.write(str(E)+' '+str(E2)+'\n')
 			if (dens > RZERO):
 				srot +=E
 				srot2 +=E2
@@ -173,9 +189,9 @@ for step in range(MC_steps):
 # output paths to a file
 	if (step%nskip2==0):
 		for p in range(P):
-			paths_output.write(str(path_xyz[0,p])+' '+str(path_xyz[1,p])+' '+str(path_xyz[2,p])+' '+str(path_angles[0,p])+' '+str(path_angles[1,p])+'\n')
-			
-		paths_output.write('\n')
+			step_out+=1
+			paths_output.write(str(step_out)+' '+str(path_xyz[0,p])+' '+str(path_xyz[1,p])+' '+str(path_xyz[2,p])+' '+str(path_angles[0,p])+' '+str(path_angles[1,p])+'\n')			
+#		paths_output.write('\n')
 paths_output.close()
 
 for index in range(nbins):
@@ -184,6 +200,7 @@ for index in range(nbins):
 		histo_out.write(str(xyz_histo[i,index]/float(N_total)/dx)+' ')
 	histo_out.write('\n')
 histo_out.close()
+E_output.close()
 
 print('accept ratio: ',float(N_accept)/float(N_total))
 E_avg=E_avg/float(N_averages)

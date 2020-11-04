@@ -14,6 +14,7 @@ def linrotstep(P,path_angles,step_z,step_phi,path_xyz,path_xyz_new,delta_gamma,r
    z+=step_z*(np.random.random()-.5)
    phi+=step_phi*(np.random.random()-.5)
 
+
    if (z >  1.0):
       z = 2.0 - z
    if (z < -1.0):
@@ -23,7 +24,7 @@ def linrotstep(P,path_angles,step_z,step_phi,path_xyz,path_xyz_new,delta_gamma,r
    y=sint*np.sin(phi)
 
 # adjust pji in -Pi..Pi range
-#   phi=(np.arctan2(y,x))
+   phi=(np.arctan2(y,x))
 
    path_xyz_new[0,p] = x
    path_xyz_new[1,p] = y
@@ -115,11 +116,11 @@ def table_sample(P,path_angles,step_z,step_phi,path_xyz,path_xyz_new,delta_gamma
 # the old density
 
    i0=int((path_angles[0,p_minus]+1.)/dz)
-   j0=int(path_angles[1,p_minus]/dphi+np.pi)
+   j0=int((path_angles[1,p_minus]+np.pi)/dphi)
    i1=int((path_angles[0,p]+1.)/dz)
-   j1=int(path_angles[1,p]/dphi+np.pi)
+   j1=int((path_angles[1,p]+np.pi)/dphi)
    i2=int((path_angles[0,p_plus]+1.)/dz)
-   j2=int(path_angles[1,p_plus]/dphi+np.pi)
+   j2=int((path_angles[1,p_plus]+np.pi)/dphi)
 
    if (i0>=Nz):
       i0=Nz-1
@@ -127,7 +128,6 @@ def table_sample(P,path_angles,step_z,step_phi,path_xyz,path_xyz_new,delta_gamma
       i1=Nz-1
    if (i2>=Nz):
       i2=Nz-1
-
    if (j0>=Nphi):
       j0=Nphi-1
    if (j1>=Nphi):
@@ -138,6 +138,7 @@ def table_sample(P,path_angles,step_z,step_phi,path_xyz,path_xyz_new,delta_gamma
    dens_old = rho_eep[i0*Nphi+j0,i1*Nphi+j1]*rho_eep[i1*Nphi+j1,i2*Nphi+j2]
 
 # test below
+# 100 grid points for z and phi each is good enough
    # dot0 = 0.0     
    # dot1 = 0.0
    # for id in range(3):
@@ -169,6 +170,10 @@ def table_sample(P,path_angles,step_z,step_phi,path_xyz,path_xyz_new,delta_gamma
    z+=step_z*(np.random.random()-.5)
    phi+=step_phi*(np.random.random()-.5)
 
+   # try integer sampling
+   index_z=np.random.randint(-1,1)
+   index_phi=np.random.randint(-1,1)
+
    if (z >  1.0):
       z = 2.0 - z
    if (z < -1.0):
@@ -181,13 +186,14 @@ def table_sample(P,path_angles,step_z,step_phi,path_xyz,path_xyz_new,delta_gamma
    # adjust pji in -Pi..Pi range
    phi=(np.arctan2(y,x))
 
-   i1=int((z+1.)/dz)
-   j1=int(phi/dphi+np.pi)
+   i1_new=int((z+1.)/dz)
+   j1_new=int((phi+np.pi)/dphi)
+  # print(j1_new)
 
-   if (i1>=Nz):
-      i1=Nz-1
-   if (j1>=Nphi):
-      j1=Nphi-1
+   if (i1_new>=Nz):
+      i1_new=Nz-1
+   if (j1_new>=Nphi):
+      j1_new=Nphi-1
 
    path_xyz_new[0,p] = x
    path_xyz_new[1,p] = y
@@ -195,8 +201,7 @@ def table_sample(P,path_angles,step_z,step_phi,path_xyz,path_xyz_new,delta_gamma
 
 # the new density 
 
-   dens_new=rho_eep[i0*Nphi+j0,i1*Nphi+j1]*rho_eep[i1*Nphi+j1,i2*Nphi+j2]
-
+   dens_new=rho_eep[i0*Nphi+j0,i1_new*Nphi+j1_new]*rho_eep[i1_new*Nphi+j1_new,i2*Nphi+j2]
 
    if (dens_new<RZERO): 
       dens_new = 0.0
@@ -225,7 +230,10 @@ def table_sample(P,path_angles,step_z,step_phi,path_xyz,path_xyz_new,delta_gamma
 
       for id in range(3):
          path_xyz[id,p]=path_xyz_new[id,p]
+      i1=i1_new
+      j1=j1_new
    return N_total,N_accept
+
 def cosine_sample(P,path_angles,step_z,step_phi,path_xyz,path_xyz_new,delta_gamma,rho,Ngrid,mu,tau,N_total,N_accept,p,RZERO):
 # under development
    p_minus=p-1
