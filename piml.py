@@ -7,10 +7,16 @@ import numpy as np
 #import scipy as sp
 import subprocess
 
+
+if (len(sys.argv) <8):
+        print('wrong number of argument')
+        print('usage: python3 ',sys.argv[0],' <T> <P> <Nsteps> <Neq> <Nskip> <Nskip2> <sampling flag: 0 old method, 1 table sampling>')
+        sys.exit()
+
 RZERO=1e-10
-T=1. # temperature in Kelvin
+T=float(sys.argv[1]) # temperature in Kelvin
 beta=1./T # in K^-1
-P=8 # number of beads
+P=int(sys.argv[2]) # number of beads
 tau=beta/float(P)
 kB= 0.6950356  # 1/cm per Kelvin
 B=1. # rotational constant in Kelvin
@@ -18,17 +24,14 @@ B*=kB # # rotational constant in 1/CM (required for linden.x)
 mu=0.
 Ngrid=1500
 delta_gamma=2./float(Ngrid-1)
-
-sampling_flag=sys.argv[1]
-print(sampling_flag)
-
-n_equilibrate=1000
-nskip=10
-nskip2=10
-
-MC_steps=100000
+MC_steps=int(sys.argv[3])
+n_equilibrate=int(sys.argv[4])
+nskip=int(sys.argv[5])
+nskip2=int(sys.argv[6])
 step_z=1.5
 step_phi=3.
+sampling_flag=sys.argv[7]
+
 linprop_command='./linear_prop/linden.x'
 
 if (path.exists(linprop_command)==False):
@@ -72,7 +75,6 @@ for p in range(P):
 	path_xyz_new[0,p] = x
 	path_xyz_new[1,p] = y
 	path_xyz_new[2,p] = z
-
 
 #create an off-diagonal rho
 #Nz=100

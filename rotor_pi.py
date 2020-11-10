@@ -170,9 +170,9 @@ def table_sample(P,path_angles,step_z,step_phi,path_xyz,path_xyz_new,delta_gamma
    z+=step_z*(np.random.random()-.5)
    phi+=step_phi*(np.random.random()-.5)
 
-   # try integer sampling
-   index_z=np.random.randint(-1,1)
-   index_phi=np.random.randint(-1,1)
+   # # try integer sampling
+   # index_z=np.random.randint(-1,1)
+   # index_phi=np.random.randint(-1,1)
 
    if (z >  1.0):
       z = 2.0 - z
