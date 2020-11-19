@@ -167,12 +167,23 @@ def table_sample(P,path_angles,step_z,step_phi,path_xyz,path_xyz_new,delta_gamma
    z=path_angles[0,p]
    phi=path_angles[1,p]
    #uniform MC move
-   z+=step_z*(np.random.random()-.5)
-   phi+=step_phi*(np.random.random()-.5)
+   #z+=step_z*(np.random.random()-.5)
+   #phi+=step_phi*(np.random.random()-.5)
 
    # # try integer sampling
-   # index_z=np.random.randint(-1,1)
-   # index_phi=np.random.randint(-1,1)
+   index_z=np.random.randint(-1,1)
+   index_phi=np.random.randint(-1,1)
+
+   i1_new=i1+index_z
+   j1_new=j1+index_phi
+
+   if (i1_new>=Nz):
+      i1_new=Nz-1
+   if (j1_new>=Nphi):
+      j1_new=Nphi-1
+
+   z=-1.+float(i1_new)*dz
+   phi=-np.pi+float(j1_new)*dphi
 
    if (z >  1.0):
       z = 2.0 - z
@@ -185,15 +196,6 @@ def table_sample(P,path_angles,step_z,step_phi,path_xyz,path_xyz_new,delta_gamma
 
    # adjust pji in -Pi..Pi range
    phi=(np.arctan2(y,x))
-
-   i1_new=int((z+1.)/dz)
-   j1_new=int((phi+np.pi)/dphi)
-  # print(j1_new)
-
-   if (i1_new>=Nz):
-      i1_new=Nz-1
-   if (j1_new>=Nphi):
-      j1_new=Nphi-1
 
    path_xyz_new[0,p] = x
    path_xyz_new[1,p] = y
