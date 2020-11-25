@@ -28,9 +28,10 @@ MC_steps=int(sys.argv[3])
 n_equilibrate=int(sys.argv[4])
 nskip=int(sys.argv[5])
 nskip2=int(sys.argv[6])
-step_z=1.5
-step_phi=3.
 sampling_flag=sys.argv[7]
+
+step_z=1.
+step_phi=1.5
 
 linprop_command='./linear_prop/linden.x'
 
@@ -60,6 +61,7 @@ for line in density_file:
 
 # define a path
 path_angles=np.zeros((2,P),float)
+
 #initialize xyz coordinates
 path_xyz=np.zeros((3,P),float)
 path_xyz_new=np.zeros((3,P),float)
@@ -79,45 +81,52 @@ for p in range(P):
 #create an off-diagonal rho
 #Nz=100
 #Nphi=100
-Nz=20
-Nphi=20
-dz=2./float(Nz-1)
-dphi=(2.*np.pi)/float(Nphi-1)
+Nz=200
+Nphi=200
+dz=2./float(Nz)
+dphi=(2.*np.pi)/float(Nphi)
 
-Ngrid_zphi=Nz*Nphi
-rho_eep=np.zeros((Ngrid_zphi,Ngrid_zphi),float)
-#rho_E_eep=np.zeros((Ngrid_zphi,Ngrid_zphi),float)
-x_grid=np.zeros((Ngrid_zphi,Ngrid_zphi),float)
-y_grid=np.zeros((Ngrid_zphi,Ngrid_zphi),float)
-z_grid=np.zeros((Ngrid_zphi,Ngrid_zphi),float)
-for i in range(Nz):
-	z=-1.+dz*float(i)
-	sint = np.sqrt(1.0 - z*z)
-	for j in range(Nphi):
-		phi=-np.pi+dphi*float(j)
-		x=sint*np.cos(phi)
-		y=sint*np.sin(phi)
-		x_grid[i,j]=x
-		y_grid[i,j]=y
-		z_grid[i,j]=z
+if (sampling_flag=='1'):
+	step_z=int(10)
+	step_phi=int(10)
 
-for i in range(Nz):
-	for j in range(Nphi):
-		for ip in range(Nz):
-			for jp in range(Nphi):
-				dot=x_grid[i,j]*x_grid[ip,jp]+y_grid[i,j]*y_grid[ip,jp]+z_grid[i,j]*z_grid[ip,jp]
-				index=int((dot+1.)/delta_gamma)
-				if (index>=Ngrid):
-					index=Ngrid-1
-				rho_eep[i*Nphi+j,ip*Nphi+jp]=rho[index]
-#				rho_eep[ip*Nphi+jp,i*Nphi+j]=rho_eep[i*Nphi+j,ip*Nphi+jp]
+
+path_angles_indices=np.zeros((2,P),int) # has to match angles for now
+i=Nz-1
+j=Nphi/2
+for p in range(P):
+	path_angles_indices[0,p]=i
+	path_angles_indices[1,p]=j
+
+rho_eep='None'
+# Ngrid_zphi=Nz*Nphi
+# rho_eep=np.zeros((Ngrid_zphi,Ngrid_zphi),float)
+# #rho_E_eep=np.zeros((Ngrid_zphi,Ngrid_zphi),float)
+# x_grid=np.zeros((Ngrid_zphi,Ngrid_zphi),float)
+# y_grid=np.zeros((Ngrid_zphi,Ngrid_zphi),float)
+# z_grid=np.zeros((Ngrid_zphi,Ngrid_zphi),float)
+# for i in range(Nz):
+# 	z=-1.+dz*float(i)
+# 	sint = np.sqrt(1.0 - z*z)
+# 	for j in range(Nphi):
+# 		phi=-np.pi+dphi*float(j)
+# 		x=sint*np.cos(phi)
+# 		y=sint*np.sin(phi)
+# 		x_grid[i,j]=x
+# 		y_grid[i,j]=y
+# 		z_grid[i,j]=z
 
 # for i in range(Nz):
 # 	for j in range(Nphi):
-# 		for ip in range(i,Nz):
-# 			for jp in range(j,Nphi):
-# 				rho_eep[ip*Nphi+jp,i*Nphi+j]=rho_eep[i*Nphi+j,ip*Nphi+jp]
-print('building rho_eep done')
+# 		for ip in range(Nz):
+# 			for jp in range(Nphi):
+# 				dot=x_grid[i,j]*x_grid[ip,jp]+y_grid[i,j]*y_grid[ip,jp]+z_grid[i,j]*z_grid[ip,jp]
+# 				index=int((dot+1.)/delta_gamma)
+# 				if (index>=Ngrid):
+# 					index=Ngrid-1
+# 				rho_eep[i*Nphi+j,ip*Nphi+jp]=rho[index]
+
+# print('building rho_eep done')
 
 #Ctau=np.zeros
 
@@ -152,7 +161,7 @@ for step in range(MC_steps):
 		if (sampling_flag=='0'):
 			N_total,N_accept=linrotstep(P,path_angles,step_z,step_phi,path_xyz,path_xyz_new,delta_gamma,rho,Ngrid,mu,tau,N_total,N_accept,p,RZERO)
 		if (sampling_flag=='1'):
-			N_total,N_accept=table_sample(P,path_angles,step_z,step_phi,path_xyz,path_xyz_new,delta_gamma,rho,Ngrid,rho_eep,dz,dphi,Nz,Nphi,mu,tau,N_total,N_accept,p,RZERO)
+			N_total,N_accept=table_sample(P,path_angles_indices,step_z,step_phi,path_xyz,path_xyz_new,delta_gamma,rho,Ngrid,rho_eep,dz,dphi,Nz,Nphi,mu,tau,N_total,N_accept,p,RZERO)
 
 	if (step%nskip==0 and step >n_equilibrate):
 		#estimators
@@ -192,7 +201,7 @@ for step in range(MC_steps):
 	if (step%nskip2==0):
 		for p in range(P):
 			step_out+=1
-			paths_output.write(str(step_out)+' '+str(path_xyz[0,p])+' '+str(path_xyz[1,p])+' '+str(path_xyz[2,p])+' '+str(path_angles[0,p])+' '+str(path_angles[1,p])+'\n')			
+			paths_output.write(str(step_out)+' '+str(path_xyz[0,p])+' '+str(path_xyz[1,p])+' '+str(path_xyz[2,p])+' '+str(path_angles[0,p])+' '+str(path_angles[1,p])+' '+str(path_angles_indices[0,p])+' '+str(path_angles_indices[1,p])+'\n')			
 #		paths_output.write('\n')
 paths_output.close()
 
