@@ -81,19 +81,19 @@ for p in range(P):
 #create an off-diagonal rho
 #Nz=100
 #Nphi=100
-Nz=200
-Nphi=200
+Nz=100
+Nphi=100
 dz=2./float(Nz)
 dphi=(2.*np.pi)/float(Nphi)
 
 if (sampling_flag=='1'):
-	step_z=int(10)
+	step_z=int(40)
 	step_phi=int(10)
 
 
 path_angles_indices=np.zeros((2,P),int) # has to match angles for now
-i=Nz-1
-j=Nphi/2
+i=int((path_angles[0,p]+1.)/dz)
+j=int((path_angles[0,p]+np.pi)/dphi)
 for p in range(P):
 	path_angles_indices[0,p]=i
 	path_angles_indices[1,p]=j
