@@ -87,8 +87,8 @@ dz=2./float(Nz)
 dphi=(2.*np.pi)/float(Nphi)
 
 if (sampling_flag=='1'):
-	step_z=int(40)
-	step_phi=int(10)
+	step_z=int(.3/dz)
+	step_phi=int(1./dphi)
 
 
 path_angles_indices=np.zeros((2,P),int) # has to match angles for now
@@ -202,7 +202,7 @@ for step in range(MC_steps):
 		for p in range(P):
 			step_out+=1
 			paths_output.write(str(step_out)+' '+str(path_xyz[0,p])+' '+str(path_xyz[1,p])+' '+str(path_xyz[2,p])+' '+str(path_angles[0,p])+' '+str(path_angles[1,p])+' '+str(path_angles_indices[0,p])+' '+str(path_angles_indices[1,p])+'\n')			
-#		paths_output.write('\n')
+		paths_output.write('\n')
 paths_output.close()
 
 for index in range(nbins):
