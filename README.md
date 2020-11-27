@@ -4,3 +4,4 @@ The algorithms are take from the MoRiBS-PIMC project:
 https://github.com/pnroy/MoRiBS-PIMC
 
 An animation of the path sampling is provided in animate.gif
+https://github.com/pnroy/PI_ML/blob/main/animate.gif
