@@ -3,4 +3,4 @@ A python script to perform a path integral monte carlo simulation of a single li
 The algorithms are take from the MoRiBS-PIMC project:
 https://github.com/pnroy/MoRiBS-PIMC
 
-An animation of the path sampling is provided in animation.gif
+An animation of the path sampling is provided in animate.gif
